@@ -69,11 +69,18 @@ catálogo com os textos alternativos sai em `assets/img/imagens.json`.
 São exportadas em **WebP** direto do canvas: as 22 ilustrações somam ~300 KB.
 Em PNG somavam 5,4 MB — gradiente suave é o pior caso possível para PNG.
 
-## Fotos reais
+## Fotos
 
-**14 das 22 imagens já são fotos do próprio restaurante**, recortadas das
-capturas do perfil do Instagram e da ficha em site de avaliação. Ficam em
-`assets/img/fotos/`, com o catálogo de textos alternativos em `fotos.json`.
+**As 22 imagens do site são fotos**, em `assets/img/fotos/`, com o catálogo de
+textos alternativos em `fotos.json`. Vêm de duas origens:
+
+- **14 do próprio restaurante** — recortadas das capturas do perfil do
+  Instagram e da ficha em site de avaliação;
+- **8 imagens de catálogo** — bebidas (com o logo da casa gravado no copo),
+  área kids, batata frita, batata com queijo e bacon, frutos do mar e caldos.
+
+Por isso o rodapé do cardápio diz que parte das fotos é do restaurante e as
+demais são ilustrativas. **Mantenha esse aviso** enquanto a origem for mista.
 
 ```bash
 # 1. recorta e converte as capturas (o material bruto não vai para o Git)
@@ -104,8 +111,9 @@ recorta do arquivo original em resolução cheia. Três regras de exclusão:
 - **quando a foto não presta, o item continua com a ilustração** — é o caso do
   chopp, cuja única foto está coberta por texto e miniaturas de outros vídeos.
 
-Ainda em ilustração: batata frita, batata com queijo e bacon, frutos do mar,
-caldos, refrigerante, água, chopp e a área kids.
+Nenhum item usa mais ilustração desenhada. O mecanismo do selo continua no
+código: se uma imagem for removida de `fotos.json`, o item volta a usar a
+ilustração de `assets/img/{pratos,cenas}/` e reaparece marcado.
 
 ### Substituindo por fotos profissionais
 

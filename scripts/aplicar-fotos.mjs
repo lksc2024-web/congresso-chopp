@@ -37,12 +37,17 @@ let trocadas = 0;
 const restantes = [];
 
 // Casa tanto a ilustração quanto a foto já aplicada, para ser idempotente.
-const padrao = /<img\s+src="assets\/img\/(?:fotos\/)?(pratos|cenas)\/([a-z0-9-]+)\.webp"([^>]*?)>/g;
+// O `src` não é necessariamente o primeiro atributo: quem já foi marcado
+// carrega `data-ilustracao` antes dele, e ignorar esse caso prenderia a
+// imagem como ilustração para sempre.
+const padrao =
+  /<img\s+([^>]*?)src="assets\/img\/(?:fotos\/)?(pratos|cenas)\/([a-z0-9-]+)\.webp"([^>]*?)>/g;
 
 const partes = [];
 let ultimo = 0;
 for (const m of html.matchAll(padrao)) {
-  const [tudo, pasta, nome, resto] = m;
+  const [tudo, antes, pasta, nome, depois] = m;
+  const resto = antes + depois;
   const chave = `${pasta}/${nome}`;
   partes.push(html.slice(ultimo, m.index));
   ultimo = m.index + tudo.length;
@@ -58,11 +63,12 @@ for (const m of html.matchAll(padrao)) {
   }
 
   const { width, height } = await sharp(path.join(FOTOS, chave + '.webp')).metadata();
-  const atributos = resto
+  const atributos = (' ' + resto)
     .replace(/\s+width="\d+"/, '')
     .replace(/\s+height="\d+"/, '')
     .replace(/\s+alt="[^"]*"/, '')
     .replace(/\s*data-ilustracao/, '')
+    .replace(/\s+/g, ' ')
     .trimEnd();
 
   partes.push(

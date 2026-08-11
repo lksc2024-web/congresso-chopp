@@ -53,6 +53,41 @@ const DAS_CAPTURAS = [
 ];
 
 /**
+ * Imagens de catálogo entregues em montagem (várias num arquivo só).
+ * Recortes por caixa fixa, medida a partir das divisórias da montagem.
+ * Nas bebidas a legenda vem queimada na base da célula, e o recorte quadrado
+ * a descarta — o site já mostra esse texto em HTML, e duplicar quebraria o
+ * responsivo e a leitura por leitor de tela.
+ */
+const DAS_MONTAGENS = [
+  { destino: 'pratos/refrigerante', arquivo: 'dcab275b-1000477928.png',
+    extrair: { left: 43, top: 0, width: 419, height: 419 }, lado: 620,
+    alt: 'Copo de refrigerante com gelo, servido no copo da casa com o logo do Congresso do Chopp.' },
+  { destino: 'pratos/agua', arquivo: 'dcab275b-1000477928.png',
+    extrair: { left: 558, top: 0, width: 419, height: 419 }, lado: 620,
+    alt: 'Copo de água gelada com rodela de limão, no copo da casa com o logo do Congresso do Chopp.' },
+  { destino: 'pratos/chopp-e-cervejas', arquivo: 'dcab275b-1000477928.png',
+    extrair: { left: 1072, top: 0, width: 419, height: 419 }, lado: 620,
+    alt: 'Caneca de chopp gelado com colarinho de espuma, na caneca da casa com o logo do Congresso do Chopp.' },
+  { destino: 'cenas/area-kids', arquivo: 'dcab275b-1000477928.png',
+    extrair: { left: 330, top: 548, width: 635, height: 476 }, largura: 1200, altura: 900,
+    alt: 'Área kids do Congresso do Chopp, com brinquedão, piscina de bolinhas, escorregador e mesinhas coloridas.' },
+
+  { destino: 'pratos/batata-frita', arquivo: '1eb87f52-1000477926.png',
+    extrair: { left: 388, top: 2, width: 330, height: 330 }, lado: 620,
+    alt: 'Porção de batata frita dourada servida no prato.' },
+  { destino: 'pratos/batata-queijo-bacon', arquivo: '1eb87f52-1000477926.png',
+    extrair: { left: 772, top: 2, width: 330, height: 330 }, lado: 620,
+    alt: 'Batata frita coberta com queijo derretido e bacon.' },
+  { destino: 'pratos/frutos-do-mar', arquivo: '1eb87f52-1000477926.png',
+    extrair: { left: 1153, top: 345, width: 330, height: 330 }, lado: 620,
+    alt: 'Travessa de frutos do mar com camarões, mexilhões e limão.' },
+  { destino: 'pratos/caldos-e-sopas', arquivo: '1eb87f52-1000477926.png',
+    extrair: { left: 24, top: 685, width: 330, height: 330 }, lado: 620,
+    alt: 'Tigela de caldo quente finalizado com cebolinha.' },
+];
+
+/**
  * Fotos vindas do grid do Instagram. Recortadas do arquivo original em
  * resolução cheia (não da célula já fatiada), usando a geometria do grid
  * medida em grid.json.
@@ -108,6 +143,23 @@ for (const item of DAS_CAPTURAS) {
     .resize(item.largura, item.altura, { fit: 'cover', position: 'centre' })
     .webp({ quality: 82 })
     .toFile(destino);
+  catalogo[item.destino] = item.alt;
+  console.log('✓', item.destino + '.webp');
+}
+
+for (const item of DAS_MONTAGENS) {
+  const src = path.join(ORIGEM, item.arquivo);
+  if (!existsSync(src)) {
+    console.warn('· pulado (origem ausente):', item.destino);
+    continue;
+  }
+  const largura = item.largura ?? item.lado;
+  const altura = item.altura ?? item.lado;
+  await sharp(src)
+    .extract(item.extrair)
+    .resize(largura, altura, { fit: 'cover', position: 'centre' })
+    .webp({ quality: 84 })
+    .toFile(path.join(OUT, item.destino + '.webp'));
   catalogo[item.destino] = item.alt;
   console.log('✓', item.destino + '.webp');
 }
