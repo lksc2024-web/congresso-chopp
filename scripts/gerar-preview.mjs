@@ -24,17 +24,20 @@ const [html, css, js] = await Promise.all([
   read('assets/js/app.js'),
 ]);
 
-/** Todas as ilustrações viram data URI, para o arquivo ficar autocontido. */
+/** Toda imagem sob assets/img vira data URI, para o arquivo ficar autocontido. */
 const imagens = {};
-for (const pasta of ['pratos', 'cenas']) {
-  const dir = path.join(ROOT, 'assets', 'img', pasta);
-  for (const arquivo of await readdir(dir)) {
-    if (!arquivo.endsWith('.webp')) continue;
-    const bin = await readFile(path.join(dir, arquivo));
-    imagens[`assets/img/${pasta}/${arquivo}`] =
-      'data:image/webp;base64,' + bin.toString('base64');
+async function coletar(relativo) {
+  const dir = path.join(ROOT, relativo);
+  for (const entrada of await readdir(dir, { withFileTypes: true })) {
+    const rel = `${relativo}/${entrada.name}`;
+    if (entrada.isDirectory()) {
+      await coletar(rel);
+    } else if (entrada.name.endsWith('.webp')) {
+      imagens[rel] = 'data:image/webp;base64,' + (await readFile(path.join(ROOT, rel))).toString('base64');
+    }
   }
 }
+await coletar('assets/img');
 
 // 1. Fica só com o miolo do <body>, já que a plataforma de publicação injeta
 //    o próprio esqueleto de documento.

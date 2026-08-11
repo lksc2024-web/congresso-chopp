@@ -11,10 +11,12 @@
     "audit:ci": "node audit-congresso.mjs http://127.0.0.1:8080/ --out audit-local --strict",
     "imagens": "node scripts/gerar-imagens.mjs",
     "ilustracoes": "node scripts/gerar-ilustracoes.mjs",
-    "preview": "node scripts/gerar-preview.mjs"
+    "preview": "node scripts/gerar-preview.mjs",
+    "fotos": "node scripts/aplicar-fotos.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.62.1"
+    "playwright": "^1.62.1",
+    "sharp": "^0.35.3"
   },
   "engines": {
     "node": ">=20"

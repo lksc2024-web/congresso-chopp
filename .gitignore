@@ -5,3 +5,4 @@ audit-preview/
 *.log
 .DS_Store
 preview-artifact.html
+assets/img/celulas/

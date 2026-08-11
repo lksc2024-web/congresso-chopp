@@ -69,36 +69,51 @@ catálogo com os textos alternativos sai em `assets/img/imagens.json`.
 São exportadas em **WebP** direto do canvas: as 22 ilustrações somam ~300 KB.
 Em PNG somavam 5,4 MB — gradiente suave é o pior caso possível para PNG.
 
-### Por que ilustrações e não fotos
+## Fotos reais
 
-O ambiente onde o site foi montado não tem acesso de rede aos servidores de
-imagem (Instagram, Facebook, Restaurant Guru e afins são bloqueados pela
-política de egresso), então baixar as fotos do restaurante era impossível. As
-ilustrações foram desenhadas a partir das capturas do perfil do restaurante e
-seguem a paleta real do salão: parede creme com faixa bordô, colunas de
-tijolinho, piso de cerâmica clara, mesas de madeira escura e cadeiras pretas
-com assento creme.
+**14 das 22 imagens já são fotos do próprio restaurante**, recortadas das
+capturas do perfil do Instagram e da ficha em site de avaliação. Ficam em
+`assets/img/fotos/`, com o catálogo de textos alternativos em `fotos.json`.
 
-A seção de cardápio traz um aviso explícito de que são ilustrações, não fotos
-dos pratos servidos — **não remova esse aviso enquanto as imagens forem
-desenhadas**, sob risco de o cliente se sentir enganado ao chegar no salão.
+```bash
+# 1. recorta e converte as capturas (o material bruto não vai para o Git)
+node scripts/preparar-fotos.mjs <pasta-com-as-capturas> <pasta-com-as-celulas>
 
-### Trocar por fotos reais
-
-Basta apontar o `src` para o arquivo novo — nenhuma mudança de CSS é
-necessária, o `object-fit: cover` já cuida do enquadramento:
-
-```html
-<!-- de -->
-<img src="assets/img/cenas/salao-principal.webp" width="1000" height="750" ...>
-<!-- para -->
-<img src="assets/img/cenas/salao-principal.jpg" width="1600" height="1200" ...>
+# 2. troca no index.html as ilustrações pelas fotos que existirem
+npm run fotos
+npm run fotos -- --check   # só relata, sem gravar
 ```
 
-Recomendações: WebP ou JPEG progressivo, 4:3 para as cenas e 1:1 para os
-pratos, abaixo de 250 KB cada. Mantenha `width`/`height` no HTML para não gerar
-layout shift, reescreva o `alt` descrevendo a foto real e apague o aviso do
-cardápio quando todas forem fotos.
+`aplicar-fotos.mjs` é idempotente e faz a ponte entre os dois mundos: onde há
+foto, usa a foto e ajusta `src`, `alt` e dimensões; onde não há, mantém a
+ilustração e marca a imagem com `data-ilustracao`, que o CSS transforma num
+selo **"ilustração"** no canto. Quando novas fotos chegarem, acrescente-as em
+`preparar-fotos.mjs`, rode os dois comandos e o selo some sozinho.
+
+### Como as fotos foram escolhidas
+
+As capturas eram telas inteiras do celular, com o grid do Instagram. O script
+mede período e fase do grid, detecta as divisórias reais de cada célula e
+recorta do arquivo original em resolução cheia. Três regras de exclusão:
+
+- **nada com rosto de cliente identificável** — as fotos de casamento com os
+  noivos, a foto do salão cheio e as de clientes ficaram de fora; a de eventos
+  mostra só a decoração e o bolo;
+- **nada com sobreposição de rede social** — selo de vídeo, contador de
+  visualizações, marca d'água ou legenda queimada na imagem;
+- **quando a foto não presta, o item continua com a ilustração** — é o caso do
+  chopp, cuja única foto está coberta por texto e miniaturas de outros vídeos.
+
+Ainda em ilustração: batata frita, batata com queijo e bacon, frutos do mar,
+caldos, refrigerante, água, chopp e a área kids.
+
+### Substituindo por fotos profissionais
+
+Estas vieram de capturas de tela e têm a resolução que isso permite. Quando o
+restaurante tiver fotos originais, coloque-as em `assets/img/fotos/` com o
+mesmo nome (`pratos/<item>.webp`, `cenas/<cena>.webp`), acrescente o texto
+alternativo em `fotos.json` e rode `npm run fotos`. Recomendações: WebP ou
+JPEG progressivo, 1:1 para pratos e 4:3 para cenas, abaixo de 250 KB cada.
 
 O mesmo vale para a imagem de compartilhamento (`og-congresso-do-chopp.png`):
 uma foto real do salão cheio rende muito mais clique no WhatsApp do que o card
@@ -188,6 +203,7 @@ favicon.svg  site.webmanifest  robots.txt  sitemap.xml
 assets/css/styles.css          folha única, tokens em custom properties
 assets/js/app.js               menu mobile, scroll spy, reveal, mapa sob demanda
 assets/img/                    OG image e ícones (PNG)
+assets/img/fotos/              14 fotos reais do restaurante (WebP) + fotos.json
 assets/img/pratos/             18 ilustrações do cardápio (WebP)
 assets/img/cenas/              4 cenas de ambiente e eventos (WebP)
 assets/img/imagens.json        catálogo das ilustrações com os textos alternativos
@@ -195,6 +211,8 @@ audit-congresso.mjs            auditoria Playwright
 scripts/ilustracoes.js         biblioteca de desenho em Canvas 2D
 scripts/gerar-ilustracoes.mjs  renderiza pratos e cenas em WebP
 scripts/gerar-imagens.mjs      gera OG image e ícones do PWA
+scripts/preparar-fotos.mjs     recorta as capturas e gera assets/img/fotos/
+scripts/aplicar-fotos.mjs      troca ilustração por foto no index.html
 scripts/gerar-preview.mjs      monta a versão de arquivo único
 .github/workflows/deploy.yml   publica no GitHub Pages
 .github/workflows/audit.yml    roda a auditoria no CI
