@@ -106,9 +106,17 @@ async function launch() {
   }
 }
 
-/** Rola a página do topo ao fim e volta, em passos de um viewport. */
+/**
+ * Rola a página do topo ao fim e volta, em passos de um viewport.
+ * Desliga scroll-behavior: smooth durante a varredura — com rolagem suave,
+ * chamadas sucessivas de scrollTo reiniciam a animação e a página mal sai do
+ * lugar, o que faz o lazy-load e as animações de entrada não dispararem.
+ */
 async function autoScroll(page) {
   await page.evaluate(async () => {
+    const raiz = document.documentElement;
+    const anterior = raiz.style.scrollBehavior;
+    raiz.style.scrollBehavior = 'auto';
     const step = window.innerHeight * 0.8;
     const max = document.body.scrollHeight;
     for (let y = 0; y < max; y += step) {
@@ -117,6 +125,7 @@ async function autoScroll(page) {
     }
     window.scrollTo(0, 0);
     await new Promise((r) => setTimeout(r, 200));
+    raiz.style.scrollBehavior = anterior;
   });
 }
 

@@ -71,29 +71,129 @@
 
   /* ------------------------------------------------------- Primitivas comuns */
 
-  function fundo(ctx, w, h, cor) {
-    const g = ctx.createLinearGradient(0, 0, w * 0.5, h);
-    g.addColorStop(0, P.fundoTopo);
-    g.addColorStop(0.8, P.fundoBase);
+  /**
+   * Cenário dos pratos: bancada de granito com o salão desfocado ao fundo.
+   * É o enquadramento das fotos reais do restaurante — e o desfoque dá a
+   * profundidade de campo que separa a comida do fundo, que é o que faz uma
+   * foto de cardápio parecer profissional em vez de recorte chapado.
+   */
+  function fundoMesa(ctx, w, h, cor, rnd) {
+    const yMesa = h * 0.6;
+    const luz = cor || P.amber;
+
+    // --- ambiente ao fundo, fora de foco ---
+    ctx.save();
+    const g = ctx.createLinearGradient(0, 0, 0, yMesa);
+    g.addColorStop(0, '#2A211A');
+    g.addColorStop(1, '#3A2E24');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, yMesa + 2);
+
+    ctx.filter = 'blur(' + Math.round(w * 0.035) + 'px)';
+    // bokeh das luminárias
+    for (let i = 0; i < 9; i++) {
+      const x = between(rnd, -w * 0.05, w * 1.05);
+      const y = between(rnd, 0, yMesa * 0.9);
+      const r = between(rnd, w * 0.035, w * 0.1);
+      circulo(ctx, x, y, r, hexA(i % 3 === 0 ? '#FFD98A' : luz, between(rnd, 0.1, 0.3)));
+    }
+    // massa de luz quente vinda de cima
+    const gl = ctx.createRadialGradient(w * 0.35, 0, 0, w * 0.35, 0, w * 0.9);
+    gl.addColorStop(0, hexA(luz, 0.34));
+    gl.addColorStop(1, hexA(luz, 0));
+    ctx.fillStyle = gl;
+    ctx.fillRect(0, 0, w, yMesa + 2);
+    ctx.restore();
+
+    // --- bancada de granito ---
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, yMesa, w, h - yMesa);
+    ctx.clip();
+    const gm = ctx.createLinearGradient(0, yMesa, 0, h);
+    gm.addColorStop(0, '#4A4038');
+    gm.addColorStop(0.25, '#6B5F52');
+    gm.addColorStop(1, '#3A322B');
+    ctx.fillStyle = gm;
+    ctx.fillRect(0, yMesa, w, h - yMesa);
+
+    // pedrisco do granito, mais denso à frente
+    for (let i = 0; i < 900; i++) {
+      const t = Math.pow(rnd(), 0.55);
+      const y = yMesa + t * (h - yMesa);
+      const x = between(rnd, 0, w);
+      const r = between(rnd, 0.6, 2.4) * (0.5 + t);
+      const tom = rnd();
+      circulo(
+        ctx,
+        x,
+        y,
+        r,
+        tom > 0.72 ? 'rgba(235,225,205,0.5)' : tom > 0.4 ? 'rgba(30,24,18,0.45)' : 'rgba(150,132,110,0.4)',
+      );
+    }
+    // brilho do tampo polido
+    const gb = ctx.createLinearGradient(0, yMesa, w * 0.7, h);
+    gb.addColorStop(0, 'rgba(255,214,150,0.16)');
+    gb.addColorStop(0.5, 'rgba(255,214,150,0)');
+    ctx.fillStyle = gb;
+    ctx.fillRect(0, yMesa, w, h - yMesa);
+    ctx.restore();
+
+    // linha de encontro da bancada com o fundo
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, yMesa - 1, w, 3);
+
+    return yMesa;
+  }
+
+  /** Sombra de contato: o que “assenta” o objeto na mesa. */
+  function sombraContato(ctx, cx, cy, rx, ry, forca) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(0,0,0,${forca ?? 0.5})`);
+    g.addColorStop(0.55, `rgba(0,0,0,${(forca ?? 0.5) * 0.45})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, ry / rx);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, rx, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** Realce especular vindo do canto superior esquerdo. */
+  function especular(ctx, cx, cy, rx, ry, rot, intensidade) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot || 0);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(255,255,255,${intensidade ?? 0.35})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.scale(1, ry / rx);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, rx, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** Vinheta + grão fino: tira o aspecto de vetor chapado. */
+  function acabamento(ctx, w, h, rnd) {
+    const g = ctx.createRadialGradient(w / 2, h * 0.45, h * 0.28, w / 2, h * 0.5, w * 0.78);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.5)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    const r = ctx.createRadialGradient(w * 0.35, h * 0.22, 0, w * 0.35, h * 0.22, w * 0.75);
-    r.addColorStop(0, hexA(cor || P.amber, 0.3));
-    r.addColorStop(1, hexA(cor || P.amber, 0));
-    ctx.fillStyle = r;
-    ctx.fillRect(0, 0, w, h);
-
-    // trama diagonal discreta
     ctx.save();
-    ctx.globalAlpha = 0.03;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    for (let i = -h; i < w + h; i += 16) {
-      ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i + h, h);
-      ctx.stroke();
+    ctx.globalAlpha = 0.045;
+    for (let i = 0; i < w * h * 0.006; i++) {
+      const x = between(rnd, 0, w);
+      const y = between(rnd, 0, h);
+      ctx.fillStyle = rnd() > 0.5 ? '#FFFFFF' : '#000000';
+      ctx.fillRect(x, y, 1.4, 1.4);
     }
     ctx.restore();
   }
@@ -366,6 +466,27 @@
           const rr = between(rnd, r * 0.2, r * 0.72);
           folhaVerde(ctx, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, r * 0.09, rnd() * Math.PI);
         }
+        // gratinado e orégano — sem isso o queijo fica chapado demais
+        ctx.save();
+        blob(ctx, cx, cy, r * 0.84, 0.03, rnd, 30);
+        ctx.clip();
+        for (let i = 0; i < 24; i++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = between(rnd, 0, r * 0.76);
+          circulo(ctx, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, between(rnd, 2, 5), 'rgba(150,88,20,0.45)');
+        }
+        for (let i = 0; i < 30; i++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = between(rnd, 0, r * 0.8);
+          ctx.save();
+          ctx.translate(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+          ctx.rotate(rnd() * Math.PI);
+          ctx.fillStyle = 'rgba(74,110,50,0.7)';
+          ctx.fillRect(-2.5, -1, 5, 2);
+          ctx.restore();
+        }
+        ctx.restore();
+        especular(ctx, cx - r * 0.35, cy - r * 0.42, r * 0.3, r * 0.15, -0.5, 0.2);
         cortesPizza(ctx, cx, cy, r);
       },
     },
@@ -446,15 +567,47 @@
         blob(ctx, cx, cy, r * 0.86, 0.03, rnd, 26);
         ctx.fillStyle = P.queijo;
         ctx.fill();
-        // uma fatia retirada: abre um vão em cunha até a borda
-        const a0 = -Math.PI * 0.62;
-        const a1 = -Math.PI * 0.24;
+
+        // textura de queijo gratinado: manchas claras e pontos tostados
         ctx.save();
+        blob(ctx, cx, cy, r * 0.86, 0.03, rnd, 26);
+        ctx.clip();
+        for (let i = 0; i < 26; i++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = between(rnd, 0, r * 0.78);
+          blob(ctx, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, between(rnd, r * 0.07, r * 0.17), 0.3, rnd, 9);
+          ctx.fillStyle = rnd() > 0.45 ? 'rgba(255,228,160,0.55)' : 'rgba(226,168,60,0.45)';
+          ctx.fill();
+        }
+        for (let i = 0; i < 30; i++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = between(rnd, 0, r * 0.8);
+          circulo(ctx, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, between(rnd, 2, 5), 'rgba(150,88,20,0.5)');
+        }
+        // orégano
+        for (let i = 0; i < 34; i++) {
+          const a = rnd() * Math.PI * 2;
+          const rr = between(rnd, 0, r * 0.82);
+          ctx.save();
+          ctx.translate(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+          ctx.rotate(rnd() * Math.PI);
+          ctx.fillStyle = 'rgba(74,110,50,0.75)';
+          ctx.fillRect(-2.5, -1, 5, 2);
+          ctx.restore();
+        }
+        ctx.restore();
+        especular(ctx, cx - r * 0.35, cy - r * 0.4, r * 0.3, r * 0.16, -0.5, 0.22);
+        // Uma fatia retirada. Apagamos a cunha em vez de pintá-la de preto,
+        // para que a bancada apareça no vão — pintar de escuro deixaria um
+        // buraco chapado no meio da pizza.
+        const a0 = -Math.PI * 0.6;
+        const a1 = -Math.PI * 0.44;
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r * 1.2, a0, a1);
+        ctx.arc(cx, cy, r * 1.35, a0, a1);
         ctx.closePath();
-        ctx.fillStyle = '#1A140F';
         ctx.fill();
         ctx.restore();
 
@@ -486,8 +639,8 @@
         ctx.strokeStyle = '#F7D98C';
         ctx.lineWidth = 5;
         ctx.lineCap = 'round';
-        for (let i = 0; i < 3; i++) {
-          const t = 0.45 + i * 0.2;
+        for (let i = 0; i < 2; i++) {
+          const t = 0.6 + i * 0.24;
           const xa = cx + Math.cos(a0) * r * t;
           const ya = cy + Math.sin(a0) * r * t;
           const xb = cx + Math.cos(a1) * r * t;
@@ -1056,98 +1209,282 @@
     },
 
     'chopp-e-cervejas': {
-      alt: 'Ilustração de uma caneca de chopp gelado com colarinho de espuma.',
+      // Referência: a foto da casa — caneca alta, colarinho branco e denso,
+      // líquido dourado cheio de bolhas e vidro coberto de condensação.
+      alt: 'Ilustração de uma caneca de chopp gelado, com colarinho denso de espuma, líquido dourado e condensação no vidro.',
       cor: P.amber,
       draw(ctx, S, rnd) {
-        const cx = S * 0.46;
-        const topo = S * 0.24,
-          base = S * 0.82;
-        const larg = S * 0.34;
+        const cx = S * 0.47;
+        const topo = S * 0.26,
+          base = S * 0.84;
+        const larg = S * 0.36;
+        const alt = base - topo;
+
+        sombraContato(ctx, cx, base + S * 0.012, larg * 0.7, S * 0.03, 0.55);
+
         // alça
         ctx.save();
-        ctx.strokeStyle = 'rgba(246,241,234,0.5)';
-        ctx.lineWidth = S * 0.035;
+        ctx.strokeStyle = 'rgba(232,242,246,0.42)';
+        ctx.lineWidth = S * 0.042;
         ctx.beginPath();
-        ctx.arc(cx + larg * 0.62, (topo + base) / 2, S * 0.11, -Math.PI * 0.45, Math.PI * 0.45);
+        ctx.arc(cx + larg * 0.52, topo + alt * 0.5, S * 0.115, -Math.PI * 0.42, Math.PI * 0.42);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = S * 0.008;
+        ctx.beginPath();
+        ctx.arc(cx + larg * 0.52, topo + alt * 0.5, S * 0.135, -Math.PI * 0.4, Math.PI * 0.4);
         ctx.stroke();
         ctx.restore();
-        // corpo
+
+        // Líquido e espuma. O clip precisa começar acima da borda, senão o
+        // colarinho é cortado e sobra uma faixa escura no topo da caneca.
         ctx.save();
-        retanguloArredondado(ctx, cx - larg / 2, topo, larg, base - topo, S * 0.03);
+        retanguloArredondado(ctx, cx - larg / 2, topo - S * 0.1, larg, alt + S * 0.1, S * 0.028);
         ctx.clip();
         const g = ctx.createLinearGradient(cx - larg / 2, 0, cx + larg / 2, 0);
-        g.addColorStop(0, '#F7B84A');
-        g.addColorStop(0.5, '#E9962A');
-        g.addColorStop(1, '#C77B12');
+        g.addColorStop(0, '#C87F16');
+        g.addColorStop(0.28, '#F9C051');
+        g.addColorStop(0.55, '#EFA02C');
+        g.addColorStop(1, '#B86E10');
         ctx.fillStyle = g;
-        ctx.fillRect(cx - larg / 2, topo, larg, base - topo);
-        bolhas(ctx, cx, topo + S * 0.1, base - 12, larg * 0.8, 40, rnd, 'rgba(255,240,200,0.55)');
-        // espuma
-        ctx.fillStyle = '#FFF8EC';
-        ctx.beginPath();
-        ctx.moveTo(cx - larg / 2, topo + S * 0.09);
-        for (let i = 0; i <= 8; i++) {
-          const x = cx - larg / 2 + (i / 8) * larg;
-          ctx.quadraticCurveTo(x, topo - S * 0.02 + (i % 2) * S * 0.02, x + larg / 16, topo + S * 0.05);
+        ctx.fillRect(cx - larg / 2, topo, larg, alt);
+        // fundo mais escuro
+        const gf = ctx.createLinearGradient(0, base - alt * 0.35, 0, base);
+        gf.addColorStop(0, 'rgba(120,66,8,0)');
+        gf.addColorStop(1, 'rgba(120,66,8,0.5)');
+        ctx.fillStyle = gf;
+        ctx.fillRect(cx - larg / 2, base - alt * 0.35, larg, alt * 0.35);
+
+        // colunas de bolhas subindo
+        for (let c = 0; c < 5; c++) {
+          const bx = cx - larg * 0.34 + c * larg * 0.17 + between(rnd, -4, 4);
+          for (let i = 0; i < 13; i++) {
+            const by = base - (i / 13) * alt * 0.9 - between(rnd, 0, 10);
+            circulo(ctx, bx + between(rnd, -5, 5), by, between(rnd, 1.4, 3.4), 'rgba(255,246,214,0.65)');
+          }
         }
-        ctx.lineTo(cx + larg / 2, topo - S * 0.06);
-        ctx.lineTo(cx - larg / 2, topo - S * 0.06);
+        bolhas(ctx, cx, topo + S * 0.08, base - 10, larg * 0.9, 45, rnd, 'rgba(255,250,225,0.4)');
+
+        // colarinho denso
+        const yEsp = topo + S * 0.1;
+        ctx.fillStyle = '#FFFDF6';
+        ctx.beginPath();
+        ctx.moveTo(cx - larg / 2, yEsp);
+        for (let i = 0; i <= 10; i++) {
+          const x = cx - larg / 2 + (i / 10) * larg;
+          ctx.quadraticCurveTo(x, yEsp - S * 0.035, x + larg / 20, yEsp - S * 0.005);
+        }
+        ctx.lineTo(cx + larg / 2, topo - S * 0.1);
+        ctx.lineTo(cx - larg / 2, topo - S * 0.1);
         ctx.closePath();
         ctx.fill();
+        // textura da espuma
+        for (let i = 0; i < 70; i++) {
+          const x = cx + between(rnd, -larg * 0.48, larg * 0.48);
+          const y = between(rnd, topo - S * 0.08, yEsp - 2);
+          circulo(ctx, x, y, between(rnd, 1.5, 4.5), rnd() > 0.5 ? 'rgba(228,218,198,0.55)' : 'rgba(255,255,255,0.7)');
+        }
         ctx.restore();
-        // vidro
+
+        // vidro e condensação
         ctx.save();
-        retanguloArredondado(ctx, cx - larg / 2, topo - S * 0.06, larg, base - topo + S * 0.06, S * 0.03);
-        ctx.strokeStyle = 'rgba(246,241,234,0.6)';
-        ctx.lineWidth = 5;
-        ctx.stroke();
+        retanguloArredondado(ctx, cx - larg / 2, topo - S * 0.1, larg, alt + S * 0.1, S * 0.028);
         ctx.clip();
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
-        ctx.fillRect(cx - larg / 2, topo, larg * 0.16, base - topo);
+        // gotas
+        for (let i = 0; i < 55; i++) {
+          const x = cx + between(rnd, -larg * 0.48, larg * 0.48);
+          const y = between(rnd, topo, base);
+          const r = between(rnd, 1.6, 4.2);
+          circulo(ctx, x, y, r, 'rgba(255,255,255,0.34)');
+          circulo(ctx, x - r * 0.3, y - r * 0.3, r * 0.4, 'rgba(255,255,255,0.6)');
+        }
+        // escorridos
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 5; i++) {
+          const x = cx + between(rnd, -larg * 0.42, larg * 0.42);
+          const y0 = between(rnd, topo + 10, base - alt * 0.5);
+          ctx.beginPath();
+          ctx.moveTo(x, y0);
+          ctx.lineTo(x + between(rnd, -3, 3), y0 + between(rnd, alt * 0.12, alt * 0.3));
+          ctx.stroke();
+        }
+        // reflexos nas laterais
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(cx - larg * 0.46, topo - S * 0.1, larg * 0.1, alt + S * 0.1);
+        ctx.fillStyle = 'rgba(255,255,255,0.11)';
+        ctx.fillRect(cx + larg * 0.33, topo - S * 0.1, larg * 0.07, alt + S * 0.1);
         ctx.restore();
+
+        // contorno do vidro
+        retanguloArredondado(ctx, cx - larg / 2, topo - S * 0.1, larg, alt + S * 0.1, S * 0.028);
+        ctx.strokeStyle = 'rgba(246,250,252,0.7)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        especular(ctx, cx - larg * 0.34, topo + alt * 0.22, S * 0.03, S * 0.1, -0.12, 0.45);
       },
     },
 
-    'drinks-e-caipirinhas': {
-      alt: 'Ilustração de uma caipirinha com pedaços de limão, gelo e hortelã.',
-      cor: '#7CB05A',
+    'drinks-e-coqueteis': {
+      // Referência: a foto do bar da casa — três taças na bancada de granito,
+      // com sombrinha de papel: uma azul com hortelã, uma laranja em degradê
+      // sobre granadina e uma cremosa com abacaxi.
+      alt: 'Ilustração de três coquetéis do bar do Congresso do Chopp em taças com sombrinha: um azul com hortelã, um laranja em degradê e um cremoso com abacaxi.',
+      cor: '#E8913A',
       draw(ctx, S, rnd) {
-        const cx = S / 2;
-        const forma = copo(ctx, cx, S * 0.8, S * 0.36, S * 0.3, S * 0.44);
-        ctx.save();
-        ctx.clip();
-        const g = ctx.createLinearGradient(0, forma.topo, 0, forma.base);
-        g.addColorStop(0, 'rgba(220,235,190,0.7)');
-        g.addColorStop(1, 'rgba(150,185,110,0.85)');
-        ctx.fillStyle = g;
-        ctx.fillRect(cx - S * 0.2, forma.topo + S * 0.04, S * 0.4, S * 0.5);
-        gelo(ctx, cx - S * 0.07, forma.topo + S * 0.1, S * 0.1, 0.35);
-        gelo(ctx, cx + S * 0.07, forma.topo + S * 0.16, S * 0.095, -0.5);
-        gelo(ctx, cx, forma.topo + S * 0.28, S * 0.09, 0.9);
-        // gomos de limão
-        for (let i = 0; i < 4; i++) {
-          const x = cx + between(rnd, -S * 0.11, S * 0.11);
-          const y = forma.topo + between(rnd, S * 0.08, S * 0.34);
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(rnd() * Math.PI);
+        /** Taça de coquetel: pé, haste e bojo, com o líquido em degradê. */
+        function taca(cx, base, escala, cores, opts) {
+          const s = escala;
+          const bojoR = S * 0.115 * s;
+          const yBojo = base - S * 0.2 * s;
+          const alturaHaste = S * 0.115 * s;
+
+          // pé
           ctx.beginPath();
-          ctx.arc(0, 0, S * 0.055, 0, Math.PI);
-          ctx.closePath();
-          ctx.fillStyle = '#CFE08A';
+          ctx.ellipse(cx, base, S * 0.072 * s, S * 0.02 * s, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(228,240,244,0.55)';
           ctx.fill();
-          ctx.strokeStyle = '#6E9440';
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+          ctx.lineWidth = 2;
           ctx.stroke();
+          // haste
+          ctx.fillStyle = 'rgba(230,242,246,0.45)';
+          ctx.fillRect(cx - S * 0.011 * s, base - alturaHaste, S * 0.022 * s, alturaHaste);
+
+          // bojo: perfil de taça (mais largo em cima)
+          const topo = yBojo - bojoR * 1.15;
+          const contorno = () => {
+            ctx.beginPath();
+            ctx.moveTo(cx - bojoR, topo);
+            ctx.bezierCurveTo(
+              cx - bojoR * 1.02, topo + bojoR * 1.5,
+              cx - bojoR * 0.34, yBojo + bojoR * 0.72,
+              cx, yBojo + bojoR * 0.78,
+            );
+            ctx.bezierCurveTo(
+              cx + bojoR * 0.34, yBojo + bojoR * 0.72,
+              cx + bojoR * 1.02, topo + bojoR * 1.5,
+              cx + bojoR, topo,
+            );
+            ctx.closePath();
+          };
+
+          // líquido
+          ctx.save();
+          contorno();
+          ctx.clip();
+          const g = ctx.createLinearGradient(0, topo, 0, yBojo + bojoR * 0.8);
+          cores.forEach((c, i) => g.addColorStop(i / (cores.length - 1), c));
+          ctx.fillStyle = g;
+          ctx.fillRect(cx - bojoR * 1.1, topo + bojoR * 0.22, bojoR * 2.2, bojoR * 3);
+          // bolhas e brilho interno
+          bolhas(ctx, cx, topo + bojoR * 0.5, yBojo + bojoR * 0.5, bojoR * 1.4, 16, rnd, 'rgba(255,255,255,0.3)');
+          if (opts && opts.gelo) {
+            gelo(ctx, cx - bojoR * 0.35, topo + bojoR * 0.6, bojoR * 0.6, 0.4);
+            gelo(ctx, cx + bojoR * 0.3, topo + bojoR * 0.95, bojoR * 0.52, -0.5);
+          }
           ctx.restore();
+
+          // vidro
+          contorno();
+          ctx.strokeStyle = 'rgba(246,250,252,0.75)';
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+          ctx.save();
+          contorno();
+          ctx.clip();
+          ctx.fillStyle = 'rgba(255,255,255,0.2)';
+          ctx.fillRect(cx - bojoR, topo, bojoR * 0.3, bojoR * 3);
+          ctx.restore();
+          especular(ctx, cx - bojoR * 0.5, topo + bojoR * 0.7, bojoR * 0.22, bojoR * 0.5, -0.3, 0.5);
+
+          // sombrinha de papel
+          if (opts && opts.sombrinha) {
+            const sx = cx + bojoR * 0.35;
+            const sy = topo - bojoR * 0.5;
+            ctx.save();
+            ctx.strokeStyle = '#C9B79A';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx - bojoR * 0.12, sy + bojoR * 1.1);
+            ctx.stroke();
+            ctx.translate(sx, sy);
+            ctx.rotate(-0.12);
+            const raio = bojoR * 0.66;
+            for (let i = 0; i < 8; i++) {
+              const a0 = Math.PI + (i / 8) * Math.PI;
+              const a1 = Math.PI + ((i + 1) / 8) * Math.PI;
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.arc(0, 0, raio, a0, a1);
+              ctx.closePath();
+              ctx.fillStyle = i % 2 ? opts.sombrinha : '#F6F1EA';
+              ctx.fill();
+              ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+            ctx.restore();
+          }
+
+          // guarnição na borda
+          if (opts && opts.enfeite === 'laranja') {
+            const gx = cx + bojoR * 0.82;
+            const gy = topo + bojoR * 0.12;
+            ctx.save();
+            ctx.translate(gx, gy);
+            ctx.rotate(0.35);
+            ctx.beginPath();
+            ctx.arc(0, 0, bojoR * 0.5, Math.PI * 0.1, Math.PI * 1.1);
+            ctx.closePath();
+            ctx.fillStyle = '#F0A33A';
+            ctx.fill();
+            ctx.strokeStyle = '#D9822A';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+          } else if (opts && opts.enfeite === 'abacaxi') {
+            const gx = cx + bojoR * 0.25;
+            ctx.save();
+            ctx.translate(gx, topo - bojoR * 0.1);
+            ctx.rotate(0.12);
+            retanguloArredondado(ctx, -bojoR * 0.17, -bojoR * 0.85, bojoR * 0.34, bojoR * 1.1, bojoR * 0.08);
+            ctx.fillStyle = '#EFD470';
+            ctx.fill();
+            ctx.strokeStyle = '#C9A93E';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+          } else if (opts && opts.enfeite === 'hortela') {
+            folhaVerde(ctx, cx - bojoR * 0.5, topo - bojoR * 0.08, bojoR * 0.42, -0.5, '#4E8B3C');
+            folhaVerde(ctx, cx - bojoR * 0.75, topo + bojoR * 0.1, bojoR * 0.34, 0.4, '#6FA84B');
+            fatiaLimao(ctx, cx - bojoR * 0.62, topo + bojoR * 0.42, bojoR * 0.3);
+          }
         }
-        // açúcar no fundo
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.fillRect(cx - S * 0.16, forma.base - S * 0.05, S * 0.32, S * 0.05);
-        ctx.restore();
-        vidroPorCima(ctx, forma, cx);
-        folhaVerde(ctx, cx + S * 0.09, forma.topo - S * 0.015, S * 0.05, -0.6, '#4E8B3C');
-        folhaVerde(ctx, cx + S * 0.13, forma.topo + S * 0.005, S * 0.042, 0.4, '#6FA84B');
+
+        const base = S * 0.855;
+        // atrás: taça azul
+        sombraContato(ctx, S * 0.27, base + S * 0.012, S * 0.1, S * 0.028, 0.45);
+        taca(S * 0.27, base - S * 0.02, 0.88, ['#7FD8F2', '#2E8FD6', '#1B5FAF'], {
+          sombrinha: '#6EC8E8',
+          enfeite: 'hortela',
+          gelo: true,
+        });
+        // atrás: taça cremosa
+        sombraContato(ctx, S * 0.74, base + S * 0.012, S * 0.1, S * 0.028, 0.45);
+        taca(S * 0.74, base - S * 0.02, 0.88, ['#FBF3E4', '#F0E2C8', '#D9C29A'], {
+          sombrinha: '#8FD3B8',
+          enfeite: 'abacaxi',
+        });
+        // frente: taça laranja (a principal)
+        sombraContato(ctx, S * 0.5, base + S * 0.016, S * 0.13, S * 0.034, 0.55);
+        taca(S * 0.5, base, 1.08, ['#FBC65A', '#F0842E', '#D4321F', '#8E1020'], {
+          sombrinha: '#E86B9A',
+          enfeite: 'laranja',
+        });
       },
     },
 
@@ -1167,24 +1504,24 @@
         ctx.strokeStyle = '#C9C2B4';
         ctx.lineWidth = S * 0.022;
         ctx.beginPath();
-        ctx.moveTo(cx, S * 0.08);
+        ctx.moveTo(cx, S * 0.16);
         ctx.lineTo(cx, S * 0.86);
         ctx.stroke();
         // cabo de madeira no topo
         ctx.strokeStyle = '#6B4A2F';
         ctx.lineWidth = S * 0.032;
         ctx.beginPath();
-        ctx.moveTo(cx, S * 0.06);
-        ctx.lineTo(cx, S * 0.16);
+        ctx.moveTo(cx, S * 0.14);
+        ctx.lineTo(cx, S * 0.24);
         ctx.stroke();
         ctx.restore();
 
         // peças enfiadas, de cima para baixo
         const pecas = [
-          { y: 0.26, tipo: 'picanha' },
-          { y: 0.42, tipo: 'linguica' },
-          { y: 0.55, tipo: 'linguica' },
-          { y: 0.7, tipo: 'picanha' },
+          { y: 0.34, tipo: 'picanha' },
+          { y: 0.48, tipo: 'linguica' },
+          { y: 0.6, tipo: 'linguica' },
+          { y: 0.73, tipo: 'picanha' },
         ];
         for (const p of pecas) {
           const y = S * p.y;
@@ -1212,26 +1549,43 @@
               circulo(ctx, cx + between(rnd, -w * 0.44, w * 0.44), y + between(rnd, -hh * 0.3, hh * 0.4), 2, 'rgba(255,255,255,0.8)');
             }
           } else {
+            // Gomos de linguiça: elipse achatada, tom mais marrom e a marca da
+            // tripa, senão a peça vira um tomate vermelho no espeto.
             for (let k = -1; k <= 1; k++) {
-              const x = cx + k * S * 0.085;
-              circulo(ctx, x, y, S * 0.062, '#8E2F22');
-              circulo(ctx, x, y, S * 0.05, '#B4472F');
+              const x = cx + k * S * 0.088;
               ctx.save();
-              ctx.globalAlpha = 0.45;
-              for (let i = 0; i < 7; i++) {
-                circulo(ctx, x + between(rnd, -14, 14), y + between(rnd, -14, 14), between(rnd, 2, 4), '#F0D3B0');
+              ctx.translate(x, y);
+              ctx.rotate(between(rnd, -0.12, 0.12));
+              ctx.beginPath();
+              ctx.ellipse(0, 0, S * 0.062, S * 0.05, 0, 0, Math.PI * 2);
+              const g = ctx.createLinearGradient(0, -S * 0.05, 0, S * 0.05);
+              g.addColorStop(0, '#9C4A22');
+              g.addColorStop(0.45, '#7E3418');
+              g.addColorStop(1, '#4E1D0E');
+              ctx.fillStyle = g;
+              sombra(ctx, () => ctx.fill(), 10);
+              ctx.fill();
+              // tripa tostada
+              ctx.beginPath();
+              ctx.ellipse(0, 0, S * 0.062, S * 0.05, 0, 0, Math.PI * 2);
+              ctx.strokeStyle = 'rgba(40,18,8,0.65)';
+              ctx.lineWidth = 3;
+              ctx.stroke();
+              // gordura entremeada
+              ctx.save();
+              ctx.beginPath();
+              ctx.ellipse(0, 0, S * 0.055, S * 0.044, 0, 0, Math.PI * 2);
+              ctx.clip();
+              ctx.globalAlpha = 0.5;
+              for (let i = 0; i < 9; i++) {
+                circulo(ctx, between(rnd, -18, 18), between(rnd, -14, 14), between(rnd, 1.8, 3.6), '#E8C79A');
               }
+              ctx.restore();
+              especular(ctx, -S * 0.018, -S * 0.016, S * 0.02, S * 0.012, -0.3, 0.3);
               ctx.restore();
             }
           }
         }
-        // brasa ao fundo
-        ctx.save();
-        ctx.globalAlpha = 0.5;
-        for (let i = 0; i < 18; i++) {
-          circulo(ctx, between(rnd, S * 0.1, S * 0.9), between(rnd, S * 0.05, S * 0.95), between(rnd, 1.5, 4), P.amberClaro);
-        }
-        ctx.restore();
       },
     },
 
@@ -2029,16 +2383,37 @@
     pratos,
     cenas,
     rng,
-    fundo,
-    /** Desenha um prato num canvas quadrado. */
+    fundoMesa,
+    /** Desenha um prato num canvas quadrado, com fundo, reflexo e acabamento. */
     desenharPrato(canvas, chave) {
       const item = pratos[chave];
       if (!item) throw new Error('prato desconhecido: ' + chave);
       const ctx = canvas.getContext('2d');
       const S = canvas.width;
-      const rnd = rng(chave);
-      fundo(ctx, S, S, item.cor);
-      item.draw(ctx, S, rnd);
+      const yMesa = fundoMesa(ctx, S, S, item.cor, rng(chave + ':fundo'));
+
+      // O prato é desenhado à parte para que possa ser espelhado no granito.
+      const off = document.createElement('canvas');
+      off.width = S;
+      off.height = S;
+      const octx = off.getContext('2d');
+      item.draw(octx, S, rng(chave));
+
+      // Reflexo na bancada polida, preso à área da mesa.
+      const yContato = S * 0.86;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, yMesa, S, S - yMesa);
+      ctx.clip();
+      ctx.globalAlpha = 0.15;
+      ctx.filter = 'blur(' + Math.round(S * 0.014) + 'px)';
+      ctx.translate(0, yContato * 2);
+      ctx.scale(1, -1);
+      ctx.drawImage(off, 0, 0);
+      ctx.restore();
+
+      ctx.drawImage(off, 0, 0);
+      acabamento(ctx, S, S, rng(chave + ':grao'));
       return item.alt;
     },
     /** Desenha uma cena de ambiente num canvas 4:3. */

@@ -2,7 +2,7 @@
   "pratos": {
     "pizzas-salgadas": "Ilustração de uma pizza salgada inteira, com molho de tomate, queijo derretido, fatias de calabresa e manjericão.",
     "pizzas-doces": "Ilustração de uma pizza doce coberta com chocolate, fios de leite condensado e pedaços de morango.",
-    "bordas-recheadas": "Ilustração de uma pizza de borda recheada com uma fatia levantada, mostrando o queijo derretido escorrendo.",
+    "bordas-recheadas": "Ilustração de uma pizza de borda recheada com uma fatia retirada, mostrando o queijo derretido dentro da borda.",
     "massas": "Ilustração de um prato de massa com molho de tomate, queijo ralado e folhas de manjericão.",
     "batata-frita": "Ilustração de uma porção de batata frita dourada servida em uma cesta.",
     "batata-queijo-bacon": "Ilustração de batata frita coberta com queijo derretido, tiras de bacon e cebolinha.",
@@ -14,8 +14,8 @@
     "saladas-e-acompanhamentos": "Ilustração de uma tigela de salada com folhas verdes, tomate e pepino.",
     "refrigerante": "Ilustração de um copo de refrigerante com gelo, canudo e bolhas.",
     "agua": "Ilustração de um copo de água gelada com rodela de limão.",
-    "chopp-e-cervejas": "Ilustração de uma caneca de chopp gelado com colarinho de espuma.",
-    "drinks-e-caipirinhas": "Ilustração de uma caipirinha com pedaços de limão, gelo e hortelã.",
+    "chopp-e-cervejas": "Ilustração de uma caneca de chopp gelado, com colarinho denso de espuma, líquido dourado e condensação no vidro.",
+    "drinks-e-coqueteis": "Ilustração de três coquetéis do bar do Congresso do Chopp em taças com sombrinha: um azul com hortelã, um laranja em degradê e um cremoso com abacaxi.",
     "churrasco-no-espeto": "Ilustração de um espeto de churrasco com picanha, linguiça e frango, servido na mesa.",
     "sobremesas": "Ilustração de um pudim de leite condensado com calda de caramelo escorrendo."
   },

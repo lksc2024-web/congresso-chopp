@@ -86,40 +86,78 @@
     sections.forEach(function (s) { spy.observe(s); });
   }
 
-  /* ------------------------------------------ Revelação suave das seções */
+  /* ------------------------------------------ Revelação suave das seções
+
+     O IntersectionObserver sozinho NÃO é confiável para isto: numa rolagem
+     rápida (flick no celular, tecla End, salto para uma âncora) ele não
+     dispara para tudo que atravessa a viewport, e os elementos que ele pulou
+     ficariam invisíveis para sempre. Já aconteceu aqui — metade do cardápio
+     sumia. Por isso o observer cuida só do efeito, e uma varredura por scroll
+     garante a correção: nada pode ficar escondido. */
   if (!reduceMotion && 'IntersectionObserver' in window) {
-    var targets = document.querySelectorAll(
-      '.section .card, .section .feature, .section .prato, .evento-media, .cta-box, .faq details'
+    var pendentes = Array.prototype.slice.call(
+      document.querySelectorAll(
+        '.section .card, .section .feature, .section .prato, .evento-media, .cta-box, .faq details'
+      )
     );
-    var revealed = 0;
+
+    function mostrar(el) {
+      if (!el.classList.contains('is-visible')) el.classList.add('is-visible');
+    }
+
     var revealer = new IntersectionObserver(
       function (entries, obs) {
         entries.forEach(function (entry) {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-visible');
-          revealed++;
+          mostrar(entry.target);
           obs.unobserve(entry.target);
         });
       },
       { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }
     );
-    Array.prototype.forEach.call(targets, function (el, i) {
+
+    pendentes.forEach(function (el, i) {
       el.classList.add('reveal');
       el.style.transitionDelay = Math.min(i % 6, 5) * 60 + 'ms';
       revealer.observe(el);
     });
 
-    // Rede de segurança: se o observer não disparar por nada (bug de browser,
-    // aba em segundo plano, renderizador headless), o conteúdo NUNCA pode
-    // ficar invisível. Se em 1,5 s nada foi revelado, mostramos tudo.
-    window.setTimeout(function () {
-      if (revealed > 0) return;
-      revealer.disconnect();
-      Array.prototype.forEach.call(targets, function (el) {
-        el.style.transitionDelay = '';
-        el.classList.add('is-visible');
+    // Varredura de garantia: revela tudo que já chegou à viewport, mesmo que o
+    // observer tenha perdido o evento. Roda no máximo uma vez por frame.
+    var agendado = false;
+    function varrer() {
+      agendado = false;
+      var limite = window.innerHeight;
+      pendentes = pendentes.filter(function (el) {
+        if (el.getBoundingClientRect().top >= limite) return true;
+        revealer.unobserve(el);
+        mostrar(el);
+        return false;
       });
-    }, 1500);
+      if (!pendentes.length) {
+        window.removeEventListener('scroll', pedirVarredura);
+        window.removeEventListener('resize', pedirVarredura);
+      }
+    }
+    function pedirVarredura() {
+      if (agendado) return;
+      agendado = true;
+      window.requestAnimationFrame(varrer);
+    }
+
+    window.addEventListener('scroll', pedirVarredura, { passive: true });
+    window.addEventListener('resize', pedirVarredura, { passive: true });
+    pedirVarredura();
+
+    // Último recurso: se nada disso rodar (renderizador sem rAF, aba em
+    // segundo plano), o conteúdo aparece inteiro depois de 2 s.
+    window.setTimeout(function () {
+      pendentes.forEach(function (el) {
+        el.style.transitionDelay = '';
+        mostrar(el);
+      });
+      pendentes = [];
+    }, 2000);
   }
 
   /* ------------------------------------------- Mapa carregado sob demanda
