@@ -1,0 +1,6 @@
+node_modules/
+audit-report/
+audit-local/
+audit-preview/
+*.log
+.DS_Store

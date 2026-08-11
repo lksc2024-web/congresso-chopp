@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#3A2A1C"/><stop offset="0.75" stop-color="#1B1512"/>
+    </linearGradient>
+    <radialGradient id="r" cx="0.35" cy="0.25" r="0.7">
+      <stop offset="0" stop-color="#F5A524" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#F5A524" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="p" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="none"/>
+      <rect width="4" height="14" fill="#ffffff" opacity="0.022"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <rect width="800" height="600" fill="url(#r)"/>
+  <rect width="800" height="600" fill="url(#p)"/>
+  <g transform="translate(400 300) scale(4.2) translate(-32 -32)" fill="none" stroke="#FFBB47"
+     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5">
+<path d="M8 54h48M14 54V30h36v24M20 30V18h24v12M26 42h4M34 42h4M32 18V8"/><circle cx="32" cy="6" r="3"/>
+  </g>
+</svg>

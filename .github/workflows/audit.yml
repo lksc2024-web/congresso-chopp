@@ -1,0 +1,54 @@
+name: Auditoria (Playwright)
+
+# Roda audit-congresso.mjs contra o site servido localmente.
+# Falha o build se aparecer qualquer erro (--strict); avisos não quebram.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL alternativa para auditar (deixe em branco para usar o site do repositório)'
+        required: false
+
+jobs:
+  auditoria:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Servir o site
+        if: ${{ !inputs.url }}
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 &
+          for _ in $(seq 1 20); do
+            curl -sf http://127.0.0.1:8080/ >/dev/null && break
+            sleep 0.5
+          done
+
+      - name: Auditar
+        run: node audit-congresso.mjs "${{ inputs.url || 'http://127.0.0.1:8080/' }}" --out audit-report --strict
+
+      - name: Resumo no job
+        if: always()
+        run: cat audit-report/audit.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Guardar relatório e screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditoria-congresso
+          path: audit-report/
+          retention-days: 30
