@@ -9,7 +9,7 @@
  *
  * Uso: node scripts/gerar-preview.mjs [destino.html]
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,20 +24,17 @@ const [html, css, js] = await Promise.all([
   read('assets/js/app.js'),
 ]);
 
-/** SVG -> data URI, para o arquivo ficar autocontido. */
-async function dataUri(rel) {
-  const svg = (await read(rel)).replace(/\n\s*/g, ' ').trim();
-  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+/** Todas as ilustrações viram data URI, para o arquivo ficar autocontido. */
+const imagens = {};
+for (const pasta of ['pratos', 'cenas']) {
+  const dir = path.join(ROOT, 'assets', 'img', pasta);
+  for (const arquivo of await readdir(dir)) {
+    if (!arquivo.endsWith('.webp')) continue;
+    const bin = await readFile(path.join(dir, arquivo));
+    imagens[`assets/img/${pasta}/${arquivo}`] =
+      'data:image/webp;base64,' + bin.toString('base64');
+  }
 }
-
-const imagens = Object.fromEntries(
-  await Promise.all(
-    ['salao-principal', 'area-kids', 'bar-chopp'].map(async (n) => [
-      `assets/img/${n}.svg`,
-      await dataUri(`assets/img/${n}.svg`),
-    ]),
-  ),
-);
 
 // 1. Fica só com o miolo do <body>, já que a plataforma de publicação injeta
 //    o próprio esqueleto de documento.
@@ -45,7 +42,7 @@ const corpo = html.slice(html.indexOf('<body>') + '<body>'.length, html.lastInde
 
 let out = corpo
   // 2. Imagens viram data URI.
-  .replace(/src="(assets\/img\/[^"]+\.svg)"/g, (m, p1) => `src="${imagens[p1] ?? p1}"`)
+  .replace(/src="(assets\/img\/[^"]+\.webp)"/g, (m, p1) => `src="${imagens[p1] ?? p1}"`)
   // 3. O iframe do Google Maps é bloqueado pela CSP da plataforma de preview;
   //    sem data-src a fachada continua sendo apenas um link para o Maps.
   .replace(/\n\s*data-src="[^"]*"/, '')

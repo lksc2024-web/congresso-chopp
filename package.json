@@ -9,7 +9,9 @@
     "audit": "node audit-congresso.mjs",
     "audit:local": "node audit-congresso.mjs http://127.0.0.1:8080/ --out audit-local",
     "audit:ci": "node audit-congresso.mjs http://127.0.0.1:8080/ --out audit-local --strict",
-    "imagens": "node scripts/gerar-imagens.mjs"
+    "imagens": "node scripts/gerar-imagens.mjs",
+    "ilustracoes": "node scripts/gerar-ilustracoes.mjs",
+    "preview": "node scripts/gerar-preview.mjs"
   },
   "devDependencies": {
     "playwright": "^1.62.1"

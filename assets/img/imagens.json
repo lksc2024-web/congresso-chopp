@@ -1,0 +1,28 @@
+{
+  "pratos": {
+    "pizzas-salgadas": "Ilustração de uma pizza salgada inteira, com molho de tomate, queijo derretido, fatias de calabresa e manjericão.",
+    "pizzas-doces": "Ilustração de uma pizza doce coberta com chocolate, fios de leite condensado e pedaços de morango.",
+    "bordas-recheadas": "Ilustração de uma pizza de borda recheada com uma fatia levantada, mostrando o queijo derretido escorrendo.",
+    "massas": "Ilustração de um prato de massa com molho de tomate, queijo ralado e folhas de manjericão.",
+    "batata-frita": "Ilustração de uma porção de batata frita dourada servida em uma cesta.",
+    "batata-queijo-bacon": "Ilustração de batata frita coberta com queijo derretido, tiras de bacon e cebolinha.",
+    "frango-a-passarinho": "Ilustração de uma porção de frango a passarinho dourado com alho e limão.",
+    "comida-japonesa": "Ilustração de uma travessa branca com fileiras de uramaki cobertos de salmão, com alface e laranja na borda.",
+    "frutos-do-mar": "Ilustração de um prato de frutos do mar com camarões, mexilhões e limão.",
+    "carnes": "Ilustração de uma tábua com fatias largas de picanha, com capa de gordura dourada e miolo rosado.",
+    "caldos-e-sopas": "Ilustração de uma tigela de caldo quente com cebolinha e vapor subindo.",
+    "saladas-e-acompanhamentos": "Ilustração de uma tigela de salada com folhas verdes, tomate e pepino.",
+    "refrigerante": "Ilustração de um copo de refrigerante com gelo, canudo e bolhas.",
+    "agua": "Ilustração de um copo de água gelada com rodela de limão.",
+    "chopp-e-cervejas": "Ilustração de uma caneca de chopp gelado com colarinho de espuma.",
+    "drinks-e-caipirinhas": "Ilustração de uma caipirinha com pedaços de limão, gelo e hortelã.",
+    "churrasco-no-espeto": "Ilustração de um espeto de churrasco com picanha, linguiça e frango, servido na mesa.",
+    "sobremesas": "Ilustração de um pudim de leite condensado com calda de caramelo escorrendo."
+  },
+  "cenas": {
+    "salao-principal": "Ilustração do salão do Congresso do Chopp: mesas de madeira postas com pratos brancos, cadeiras pretas com assento claro, colunas de tijolinho e luminárias pendentes.",
+    "buffet-completo": "Ilustração do balcão de buffet do Congresso do Chopp, com cubas de inox cheias, protetor de vidro e iluminação quente.",
+    "area-kids": "Ilustração da área kids do Congresso do Chopp, com escorregador, piscina de bolinhas e balões.",
+    "eventos": "Ilustração da decoração de um casamento no salão de eventos do Congresso do Chopp: arco florido, bolo de andares e mesa de doces."
+  }
+}

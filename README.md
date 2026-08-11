@@ -49,41 +49,60 @@ viewports, erros de console, requisições falhas e métricas de carregamento.
 O CI (`.github/workflows/audit.yml`) roda a auditoria a cada push e PR, publica o
 relatório no resumo do job e guarda os screenshots como artefato.
 
-## Assets gerados
+## Imagens: tudo gerado por código
 
-Os PNGs (Open Graph, ícones do PWA) são **gerados por código**, não versionados
-à mão:
+Nenhuma imagem do site é um arquivo binário editado à mão. São dois pipelines,
+ambos renderizando no Chromium:
 
 ```bash
-npm run imagens        # renderiza assets/img/*.png via Chromium
+npm run imagens        # OG image + ícones do PWA  → assets/img/*.png
+npm run ilustracoes    # pratos e cenas de ambiente → assets/img/{pratos,cenas}/*.webp
+npm run ilustracoes -- pratos   # só os pratos
+npm run ilustracoes -- cenas    # só as cenas
 ```
 
-Editar a identidade visual = editar `scripts/gerar-imagens.mjs` e rodar de novo.
+As ilustrações vivem em `scripts/ilustracoes.js`, desenhadas em Canvas 2D com
+um gerador pseudoaleatório de semente fixa: **a mesma chave sempre produz
+exatamente a mesma imagem**, então regerar não suja o histórico do Git. O
+catálogo com os textos alternativos sai em `assets/img/imagens.json`.
 
----
+São exportadas em **WebP** direto do canvas: as 22 ilustrações somam ~300 KB.
+Em PNG somavam 5,4 MB — gradiente suave é o pior caso possível para PNG.
 
-## Trocar as ilustrações por fotos reais
+### Por que ilustrações e não fotos
 
-As três imagens da seção **Experiência** são SVGs ilustrados
-(`assets/img/salao-principal.svg`, `area-kids.svg`, `bar-chopp.svg`), usados
-porque o ambiente onde o site foi montado não tinha acesso de rede às fotos do
-restaurante.
+O ambiente onde o site foi montado não tem acesso de rede aos servidores de
+imagem (Instagram, Facebook, Restaurant Guru e afins são bloqueados pela
+política de egresso), então baixar as fotos do restaurante era impossível. As
+ilustrações foram desenhadas a partir das capturas do perfil do restaurante e
+seguem a paleta real do salão: parede creme com faixa bordô, colunas de
+tijolinho, piso de cerâmica clara, mesas de madeira escura e cadeiras pretas
+com assento creme.
 
-Para trocar por fotos de verdade, **basta apontar o `src`** — nenhuma mudança de
-CSS é necessária (o `object-fit: cover` e o `aspect-ratio: 4/3` já cuidam do
-enquadramento):
+A seção de cardápio traz um aviso explícito de que são ilustrações, não fotos
+dos pratos servidos — **não remova esse aviso enquanto as imagens forem
+desenhadas**, sob risco de o cliente se sentir enganado ao chegar no salão.
+
+### Trocar por fotos reais
+
+Basta apontar o `src` para o arquivo novo — nenhuma mudança de CSS é
+necessária, o `object-fit: cover` já cuida do enquadramento:
 
 ```html
-<img src="assets/img/salao-principal.webp" width="1600" height="1200" ...>
+<!-- de -->
+<img src="assets/img/cenas/salao-principal.webp" width="1000" height="750" ...>
+<!-- para -->
+<img src="assets/img/cenas/salao-principal.jpg" width="1600" height="1200" ...>
 ```
 
-Recomendações: WebP ou JPEG progressivo, proporção 4:3, ~1600 px de largura,
-abaixo de 250 KB cada. Mantenha `width`/`height` no HTML para não gerar layout
-shift, e reescreva o `alt` descrevendo a foto real.
+Recomendações: WebP ou JPEG progressivo, 4:3 para as cenas e 1:1 para os
+pratos, abaixo de 250 KB cada. Mantenha `width`/`height` no HTML para não gerar
+layout shift, reescreva o `alt` descrevendo a foto real e apague o aviso do
+cardápio quando todas forem fotos.
 
 O mesmo vale para a imagem de compartilhamento (`og-congresso-do-chopp.png`):
-uma foto real do salão ou de uma pizza rende muito mais clique no WhatsApp do
-que o card tipográfico atual.
+uma foto real do salão cheio rende muito mais clique no WhatsApp do que o card
+tipográfico atual.
 
 ---
 
@@ -132,20 +151,24 @@ verdade e adicione `Referrer-Policy: strict-origin-when-cross-origin` e
 
 ## Conferir antes de ir ao ar
 
-Os dados abaixo vieram de fontes públicas (perfis do restaurante em guias
-gastronômicos, redes sociais e cadastro de CNPJ) e **precisam de uma conferência
-rápida com o restaurante** antes da publicação definitiva:
+Já confirmado pela bio do Instagram do restaurante:
+
+- ✅ **Horários** — rodízio todos os dias das **18h às 00h**; almoço **sábado e
+  domingo, das 12h às 16h**. Está no texto da página e no JSON-LD.
+- ✅ **Linktree** `linktr.ee/congressodochopp`, no rodapé e no `sameAs`.
+
+Ainda **precisa de conferência com o restaurante** antes da publicação:
 
 - [ ] **Número da rua**: as fontes divergem entre **440** e **450** na Estrada do
       Monteiro. O site está usando **450**.
 - [ ] **Preços do rodízio**: R$ 59,90 (seg–qui) e R$ 64,90 (sex–dom e feriados).
-- [ ] **Horários**: o JSON-LD declara 18h–23h de segunda a sexta e 12h–23h aos
-      sábados e domingos. O horário de fechamento não foi confirmado.
 - [ ] **Formas de pagamento**: a lista inclui Pix e VR, além de dinheiro e cartões.
 - [ ] **Condição da cortesia de aniversário** (acima de 10 convidados).
 - [ ] **Política de preço para crianças** — hoje o FAQ só diz "consulte".
 - [ ] **Nota 4,3 do Google** exibida na faixa de destaques.
 - [ ] Telefone fixo **(21) 3356-5532** ainda ativo.
+- [ ] Se o **churrasco no espeto** entra no rodízio ou é só à la carte — o site
+      diz "na mesa" sem afirmar que está incluso.
 
 O WhatsApp **(21) 98489-9170** foi informado diretamente e está em todos os CTAs.
 
@@ -164,9 +187,15 @@ index.html                     página única (todo o conteúdo)
 favicon.svg  site.webmanifest  robots.txt  sitemap.xml
 assets/css/styles.css          folha única, tokens em custom properties
 assets/js/app.js               menu mobile, scroll spy, reveal, mapa sob demanda
-assets/img/                    SVGs ilustrados + PNGs gerados
+assets/img/                    OG image e ícones (PNG)
+assets/img/pratos/             18 ilustrações do cardápio (WebP)
+assets/img/cenas/              4 cenas de ambiente e eventos (WebP)
+assets/img/imagens.json        catálogo das ilustrações com os textos alternativos
 audit-congresso.mjs            auditoria Playwright
-scripts/gerar-imagens.mjs      gera os PNGs
+scripts/ilustracoes.js         biblioteca de desenho em Canvas 2D
+scripts/gerar-ilustracoes.mjs  renderiza pratos e cenas em WebP
+scripts/gerar-imagens.mjs      gera OG image e ícones do PWA
+scripts/gerar-preview.mjs      monta a versão de arquivo único
 .github/workflows/deploy.yml   publica no GitHub Pages
 .github/workflows/audit.yml    roda a auditoria no CI
 ```

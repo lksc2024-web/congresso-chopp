@@ -89,7 +89,7 @@
   /* ------------------------------------------ Revelação suave das seções */
   if (!reduceMotion && 'IntersectionObserver' in window) {
     var targets = document.querySelectorAll(
-      '.section .card, .section .feature, .section .menu-col, .cta-box, .faq details'
+      '.section .card, .section .feature, .section .prato, .evento-media, .cta-box, .faq details'
     );
     var revealed = 0;
     var revealer = new IntersectionObserver(
