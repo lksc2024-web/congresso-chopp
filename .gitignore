@@ -4,3 +4,4 @@ audit-local/
 audit-preview/
 *.log
 .DS_Store
+preview-artifact.html

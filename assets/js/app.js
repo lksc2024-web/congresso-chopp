@@ -126,7 +126,7 @@
      Sem JS (ou antes do clique) o bloco continua sendo um link para o Google
      Maps; nenhum recurso de terceiro é baixado no carregamento da página. */
   var mapBox = document.querySelector('[data-map]');
-  if (mapBox) {
+  if (mapBox && mapBox.getAttribute('data-src')) {
     var facade = mapBox.querySelector('.map-facade');
     if (facade) {
       facade.addEventListener('click', function (e) {
