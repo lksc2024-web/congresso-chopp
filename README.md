@@ -1,4 +1,25 @@
-# Congresso do Chopp — site institucional
+# Congresso do Chopp — Restaurant Web Experience
+
+**Repository scope:** Static restaurant website with responsive presentation, WhatsApp contact actions, image preparation scripts, GitHub Pages deployment configuration, and a Playwright audit workflow.
+
+**Verification status:** The implementation and commands below are documented in this repository; this README update did not execute the site, CI, or performance benchmarks. Restaurant approval, image redistribution permissions, deployment status, and business details require independent confirmation.
+
+**Technology:** HTML, CSS, JavaScript, Node.js 20+, Playwright, Sharp. The website itself is static; Node.js tooling supports audits and media preparation.
+
+## Technical overview
+
+- Single-page, framework-free site with locally served assets and an on-demand map.
+- Automated audits for metadata, navigation, accessibility signals, layout and browser errors; results are not claimed as passing without a run.
+- Separate illustration, photo-preparation, and image-generation workflows.
+- Deployment and domain setup documented below, but not independently verified.
+
+## Original implementation documentation (Português)
+
+The following operational details are retained from the repository's existing README to avoid losing setup commands, audit coverage, media workflows, and pre-publication checks. Claims about current prices, hours, ratings, contact information, image rights, or deployment should be treated as **historical project documentation requiring revalidation**, not as independently verified current facts.
+
+---
+
+## Site institucional — documentação original
 
 Site estático do **Congresso do Chopp Bar e Restaurante** (Estrada do Monteiro, 450 —
 Campo Grande, Rio de Janeiro/RJ), reescrito com foco em três coisas: **carregar rápido
